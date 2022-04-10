@@ -1,0 +1,35 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "Dockerfile$"
+      ],
+      "matchStrings": [
+        "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sENV\\s.+_VERSION (?<currentValue>.*)\\s?"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    },
+    {
+      "fileMatch": [
+        ".*.go$"
+      ],
+      "matchStrings": [
+        "\"(?<currentValue>.*)\" \/\/ renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    },
+    {
+      "fileMatch": [
+        "^.github/workflows/.*"
+      ],
+      "matchStrings": [
+        "go-version: (?<currentValue>.*?)\n"
+      ],
+      "depNameTemplate": "golang",
+      "datasourceTemplate": "docker"
+    }
+  ]
+}

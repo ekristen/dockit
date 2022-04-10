@@ -1,0 +1,19 @@
+version: '2'
+services:
+  registry:
+    image: registry:2
+    environment:
+      REGISTRY_AUTH_TOKEN_ISSUER: dockit
+      REGISTRY_AUTH_TOKEN_REALM: http://host.docker.internal:4315/v2/token
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /pki/server.pem
+      REGISTRY_AUTH_TOKEN_SERVICE: registry
+      #REGISTRY_NOTIFICATIONS_ENDPOINTS: |
+      #  - name: dockit
+      #    url: http://192.168.11.152:5100/v2/registry/events
+      #    timeout: 1s
+      #    threshold: 5
+      #    backoff: 1s
+    volumes:
+      - ./hack/pki:/pki
+    ports:
+      - 5000:5000

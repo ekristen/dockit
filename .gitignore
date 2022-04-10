@@ -1,0 +1,4 @@
+.envrc
+*.sqlite
+cosign.key
+releases

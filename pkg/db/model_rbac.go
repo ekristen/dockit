@@ -39,6 +39,7 @@ type User struct {
 	UpdatedAt   *time.Time    `json:"updated_at"`
 	Groups      []*Group      `gorm:"many2many:user_groups"`
 	Permissions []*Permission `gorm:"foreignKey:EntityID"`
+	Tokens      []*Token      `gorm:"foreignKey:UserID"`
 }
 
 // BeforeCreate --

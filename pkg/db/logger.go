@@ -19,7 +19,7 @@ type dlogger struct {
 }
 
 func NewLogger(level string) *dlogger {
-	skip := true
+	skip := false
 	if level == "trace" {
 		skip = true
 	}
@@ -46,6 +46,10 @@ func (l *dlogger) Error(ctx context.Context, s string, args ...interface{}) {
 	log.WithContext(ctx).Errorf(s, args)
 }
 
+func (l *dlogger) Debug(ctx context.Context, s string, args ...interface{}) {
+	log.WithContext(ctx).Debugf(s, args)
+}
+
 func (l *dlogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, _ := fc()
@@ -64,5 +68,5 @@ func (l *dlogger) Trace(ctx context.Context, begin time.Time, fc func() (string,
 		return
 	}
 
-	log.WithContext(ctx).WithFields(fields).Debugf("%s [%s]", sql, elapsed)
+	log.WithContext(ctx).WithFields(fields).Tracef("%s [%s]", sql, elapsed)
 }

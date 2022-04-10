@@ -39,6 +39,7 @@ func New(ctx context.Context, dialect string, dsn string, config *gorm.Config) (
 		&User{},
 		&Group{},
 		&Permission{},
+		&Token{},
 	); err != nil {
 		return nil, err
 	}

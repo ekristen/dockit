@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ekristen/dockit/pkg/common"
 	"github.com/ekristen/dockit/pkg/db"
 	"github.com/ekristen/dockit/pkg/docker"
 	"github.com/ekristen/dockit/pkg/httpauth"
@@ -121,7 +122,13 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 
-		logrus.Debug(scopes)
+		for _, s := range scopes {
+			logrus.WithFields(logrus.Fields{
+				"type":    s.Type,
+				"name":    s.Name,
+				"actions": strings.Join(s.Actions, ","),
+			}).Debug("reconciled permission")
+		}
 	}
 
 	pem, err := ioutil.ReadFile("./hack/pki/server.key")
@@ -148,7 +155,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		StandardClaims: jwt.StandardClaims{
 			Id:        uuid.NewString(),
 			Audience:  audience,
-			Issuer:    "dockit",
+			Issuer:    common.AppVersion.Name,
 			IssuedAt:  time.Now().UTC().Unix(),
 			ExpiresAt: time.Now().UTC().Add(300 * time.Second).Unix(),
 			NotBefore: time.Now().UTC().Unix(),
@@ -169,7 +176,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		logrus.WithError(err).Error("unable to sign token")
 	}
 
-	logrus.Debug(token)
+	logrus.Trace(token)
 
 	res := TokenResponse{
 		Token:       token,

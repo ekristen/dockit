@@ -50,13 +50,15 @@ func (h *handlers) Grant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sql := h.db.Clauses(clause.OnConflict{DoNothing: true}).
-		Create(&db.Permission{
-			Type:     db.PermissionType(params["type"]),
-			Name:     params["name"],
-			Action:   db.PermissionAction(params["action"]),
-			EntityID: entityID,
-		})
+	sql := h.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "type"}, {Name: "name"}, {Name: "class"}},
+		DoUpdates: clause.AssignmentColumns([]string{"action"}),
+	}).Create(&db.Permission{
+		Type:     db.PermissionType(params["type"]),
+		Name:     params["name"],
+		Action:   db.PermissionAction(params["action"]),
+		EntityID: entityID,
+	})
 	if sql.Error != nil {
 		logrus.WithError(sql.Error).Error("unable to query database")
 		w.WriteHeader(500)

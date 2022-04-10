@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/ekristen/dockit/pkg/commands"
 	_ "github.com/ekristen/dockit/pkg/commands/grant"
+	_ "github.com/ekristen/dockit/pkg/commands/initcontainer"
 	_ "github.com/ekristen/dockit/pkg/commands/pki"
 )
 

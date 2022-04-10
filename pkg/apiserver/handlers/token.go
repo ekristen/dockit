@@ -1,8 +1,9 @@
 package handlers
 
 import (
+	"crypto"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -31,37 +32,55 @@ type TokenClaims struct {
 }
 
 func (h *handlers) BearerToken(w http.ResponseWriter, r *http.Request) {
-	panic("here")
+	w.WriteHeader(501)
 }
 
 func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
-	auth, _ := httpauth.Parse(r)
+	reqID := r.Context().Value(common.ContextReqIDKey)
+	log := logrus.WithField("reqID", reqID)
+
+	auth, err := httpauth.Parse(r)
+	if err != nil {
+		log.WithError(err).Error("unable to parse auth header")
+		w.WriteHeader(500)
+		return
+	}
 
 	var audience string = ""
 	var subject string = ""
 	var scopes []docker.Scope
 
-	logrus.WithField("query", r.URL.Query()).Debug("url query")
+	log.WithField("query", r.URL.Query()).Debug("url query")
 
-	logrus.Debug("basic authentication")
+	log.Debug("basic authentication")
 	var user db.User
 
 	sql := h.db.Where("username = ?", auth.Username()).First(&user)
 	if sql.Error != nil {
-		logrus.WithError(sql.Error).Error("unable to query database")
+		log.WithError(sql.Error).Error("unable to query database")
 		w.WriteHeader(500)
 		return
 	}
 
 	if sql.RowsAffected == 0 {
+		log.Debug("unknown user")
 		w.WriteHeader(401)
 		w.Write([]byte("unknown user"))
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(auth.Password())); err != nil {
+		log.WithError(err).Debug("invalid password")
 		w.WriteHeader(401)
 		w.Write([]byte("invalid password"))
+		return
+	}
+
+	var pki db.PKI
+	sql = h.db.Model(&db.PKI{}).Where("active = 1 AND expires_at > ?", time.Now().UTC()).Order("created_at DESC").First(&pki)
+	if sql.Error != nil {
+		log.WithError(sql.Error).Error("unable to query database")
+		w.WriteHeader(500)
 		return
 	}
 
@@ -75,23 +94,23 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		var user db.User
 		var permissions []db.Permission
 
-		// TODO: check for permissions
-
+		// Grab the user that's auth
 		sql := h.db.Model(&db.User{}).Preload(clause.Associations).Where("username = ?", subject).First(&user)
 		if sql.Error != nil {
-			logrus.WithError(sql.Error).Error("unable to query database")
+			log.WithError(sql.Error).Error("unable to query database")
 			w.WriteHeader(500)
 			return
 		}
 
+		// Bring all user ids and group ids into a single slice
 		var entityIds []int64 = make([]int64, 0)
 		entityIds = append(entityIds, user.ID)
 		for _, e := range user.Groups {
 			entityIds = append(entityIds, e.ID)
 		}
 
+		// Query for all permissions that match the entity ids
 		sql = h.db.Model(&db.Permission{}).Where(h.db.Where("entity_id IN ?", entityIds))
-
 		for _, scope := range scopes {
 			if len(scope.Actions) == 1 && scope.Actions[0] == "pull" {
 				scope.Actions = append(scope.Actions, "push")
@@ -104,7 +123,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 
 		sql = sql.Find(&permissions)
 		if sql.Error != nil {
-			logrus.WithError(sql.Error).Error("unable to query database")
+			log.WithError(sql.Error).Error("unable to query database")
 			w.WriteHeader(500)
 			return
 		}
@@ -123,7 +142,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, s := range scopes {
-			logrus.WithFields(logrus.Fields{
+			log.WithFields(logrus.Fields{
 				"type":    s.Type,
 				"name":    s.Name,
 				"actions": strings.Join(s.Actions, ","),
@@ -131,25 +150,18 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	pem, err := ioutil.ReadFile("./hack/pki/server.key")
-	if err != nil {
-		logrus.WithError(err).Error("unable to read pki private key")
-		w.WriteHeader(500)
-		return
-	}
-
-	certPem, err := ioutil.ReadFile("./hack/pki/server.pem")
-	if err != nil {
-		logrus.WithError(err).Error("unable to read pki private key")
-		w.WriteHeader(500)
-		return
-	}
-
-	x5c := strings.ReplaceAll(string(certPem), "-----BEGIN CERTIFICATE-----", "")
+	x5c := strings.ReplaceAll(pki.X509, "-----BEGIN CERTIFICATE-----", "")
 	x5c = strings.ReplaceAll(x5c, "-----END CERTIFICATE-----", "")
 	x5c = strings.ReplaceAll(x5c, "\n", "")
 
-	t := jwt.New(jwt.GetSigningMethod("RS256"))
+	signingMethod := ""
+	if pki.Type == "ec" {
+		signingMethod = fmt.Sprintf("ES%d", pki.Bits)
+	} else if pki.Type == "rsa" {
+		signingMethod = fmt.Sprintf("RS%d", pki.Bits)
+	}
+
+	t := jwt.New(jwt.GetSigningMethod(signingMethod))
 	t.Claims = TokenClaims{
 		Access: scopes,
 		StandardClaims: jwt.StandardClaims{
@@ -164,19 +176,32 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 	}
 	t.Header["x5c"] = []string{x5c}
 
-	key, err := jwt.ParseRSAPrivateKeyFromPEM(pem)
-	if err != nil {
-		logrus.WithError(err).Error("unable to parse pki private key")
-		w.WriteHeader(500)
-		return
+	var key crypto.PrivateKey
+
+	if pki.Type == "rsa" {
+		key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(pki.Private))
+		if err != nil {
+			log.WithError(err).Error("unable to parse pki private key")
+			w.WriteHeader(500)
+			return
+		}
+	} else if pki.Type == "ec" {
+		key, err = jwt.ParseECPrivateKeyFromPEM([]byte(pki.Private))
+		if err != nil {
+			log.WithError(err).Error("unable to parse pki private key")
+			w.WriteHeader(500)
+			return
+		}
 	}
 
 	token, err := t.SignedString(key)
 	if err != nil {
-		logrus.WithError(err).Error("unable to sign token")
+		log.WithError(err).Error("unable to sign token")
+		w.WriteHeader(500)
+		return
 	}
 
-	logrus.Trace(token)
+	log.Trace(token)
 
 	res := TokenResponse{
 		Token:       token,
@@ -188,7 +213,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		w.WriteHeader(500)
-		logrus.WithError(err).Error("unable to encode json")
+		log.WithError(err).Error("unable to encode json")
 		return
 	}
 }

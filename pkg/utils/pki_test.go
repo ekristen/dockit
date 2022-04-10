@@ -9,7 +9,7 @@ import (
 )
 
 func Test_GenerateECKey(t *testing.T) {
-	key, pem, err := GenerateECKey()
+	key, pem, err := GenerateECKey(256)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "P-256", key.Params().Name)
@@ -20,10 +20,10 @@ func Test_GenerateECKey(t *testing.T) {
 }
 
 func Test_GenerateCertificate(t *testing.T) {
-	key, _, err := GenerateECKey()
+	key, _, err := GenerateECKey(256)
 	assert.NoError(t, err)
 
-	certPem, err := GenerateCertificate(&key.PublicKey, key, 1, 0, 0)
+	certPem, err := GenerateCertificate(1, &key.PublicKey, key, 1, 0, 0)
 	assert.NoError(t, err)
 
 	assert.Contains(t, string(certPem), "BEGIN CERTIFICATE")

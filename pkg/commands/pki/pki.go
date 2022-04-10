@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"fmt"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/ekristen/dockit/pkg/common"
 	"github.com/ekristen/dockit/pkg/utils"
 	"github.com/urfave/cli/v2"
@@ -19,7 +20,7 @@ func (s *pkiCommand) Execute(c *cli.Context) (err error) {
 	var key crypto.PrivateKey
 
 	if c.String("key-type") == "ec" {
-		key1, pem1, err := utils.GenerateECKey()
+		key1, pem1, err := utils.GenerateECKey(c.Int("key-size"))
 		if err != nil {
 			return err
 		}
@@ -27,7 +28,7 @@ func (s *pkiCommand) Execute(c *cli.Context) (err error) {
 		pub = &key1.PublicKey
 		key = key1
 	} else if c.String("key-type") == "rsa" {
-		key1, pem1, err := utils.GenerateRSAKey(2048)
+		key1, pem1, err := utils.GenerateRSAKey(c.Int("key-size"))
 		if err != nil {
 			return err
 		}
@@ -36,7 +37,12 @@ func (s *pkiCommand) Execute(c *cli.Context) (err error) {
 		key = key1
 	}
 
-	certPem, err := utils.GenerateCertificate(pub, key, c.Int("years"), c.Int("months"), 0)
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		return err
+	}
+
+	_, certPem, err := utils.GenerateCertificate(node.Generate().Int64(), pub, key, c.Int("years"), c.Int("months"), 0)
 	if err != nil {
 		return err
 	}

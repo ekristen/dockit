@@ -57,6 +57,8 @@ func (a *apiServer) Start() error {
 	api.Path("/admin/user/{user}/{type}/{name}/{action}").Methods("POST").HandlerFunc(handlers.Grant)
 	api.Path("/admin/group/{group}/{type}/{name}/{action}").Methods("DELETE").HandlerFunc(handlers.Revoke)
 
+	api.Path("/certs/{format}").Methods("GET").HandlerFunc(handlers.PKICerts)
+
 	// Below this point is where the server is started and graceful shutdown occurs.
 
 	router.NotFoundHandler = router.NewRoute().HandlerFunc(http.NotFound).GetHandler()
@@ -71,11 +73,11 @@ func (a *apiServer) Start() error {
 			a.log.Fatalf("listen: %s\n", err)
 		}
 	}()
-	a.log.WithField("port", a.port).Info("Starting API Server")
+	a.log.WithField("port", a.port).Info("starting api server")
 
 	<-a.ctx.Done()
 
-	a.log.Info("Shutting down API Server")
+	a.log.Info("shutting down the api server gracefully")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
@@ -83,7 +85,7 @@ func (a *apiServer) Start() error {
 	}()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		a.log.WithError(err).Error("Unable to shutdown the API server gracefully")
+		a.log.WithError(err).Error("unable to shutdown the api server gracefully")
 		return err
 	}
 

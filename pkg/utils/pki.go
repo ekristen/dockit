@@ -9,24 +9,19 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"time"
-
-	"github.com/bwmarrin/snowflake"
 )
 
-func GenerateCertificate(pub, priv interface{}, years, months, days int) (certPem []byte, err error) {
-	node, err := snowflake.NewNode(1)
-	if err != nil {
-		return nil, err
-	}
-
-	template := x509.Certificate{
-		SerialNumber: big.NewInt(node.Generate().Int64()),
+func GenerateCertificate(id int64, pub, priv interface{}, years, months, days int) (cert *x509.Certificate, certPem []byte, err error) {
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(id),
 		Subject: pkix.Name{
-			Organization: []string{"ekristen"},
-			Country:      []string{"US"},
-			Province:     []string{"dev"},
+			OrganizationalUnit: []string{"dockit"},
+			Organization:       []string{"ekristen"},
+			Country:            []string{"US"},
+			Province:           []string{"dev"},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(years, months, days),
@@ -37,10 +32,10 @@ func GenerateCertificate(pub, priv interface{}, years, months, days int) (certPe
 	}
 
 	certDer, err := x509.CreateCertificate(
-		rand.Reader, &template, &template, pub, priv,
+		rand.Reader, template, template, pub, priv,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	certBlock := pem.Block{
@@ -51,14 +46,27 @@ func GenerateCertificate(pub, priv interface{}, years, months, days int) (certPe
 	buf := bytes.NewBuffer(certPem)
 
 	if err := pem.Encode(buf, &certBlock); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return buf.Bytes(), err
+	return template, buf.Bytes(), err
 }
 
-func GenerateECKey() (key *ecdsa.PrivateKey, pemData []byte, err error) {
-	key, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func GenerateECKey(curveSize int) (key *ecdsa.PrivateKey, pemData []byte, err error) {
+	var curve elliptic.Curve
+
+	switch curveSize {
+	case 224:
+		curve = elliptic.P224()
+	case 256:
+		curve = elliptic.P256()
+	case 384:
+		curve = elliptic.P384()
+	default:
+		return nil, nil, fmt.Errorf("unsupported curve size: %d", curveSize)
+	}
+
+	key, err = ecdsa.GenerateKey(curve, rand.Reader)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -83,6 +91,10 @@ func GenerateECKey() (key *ecdsa.PrivateKey, pemData []byte, err error) {
 }
 
 func GenerateRSAKey(bits int) (key *rsa.PrivateKey, pemData []byte, err error) {
+	if bits != 2048 && bits != 4096 && bits != 3072 && bits != 7680 {
+		return nil, nil, fmt.Errorf("unsupported bit size: %d", bits)
+	}
+
 	key, err = rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return nil, nil, err

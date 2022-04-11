@@ -2,11 +2,25 @@
 
 Dead simple, yet powerful, authentication for any OCI registry.
 
+## Overview
+
+Dockit is a robust authentication system for an OCI compatible registry.
+
+## Admin API
+
+Dockit has an Admin API that is used to manage the permissions. Dockit supports users and groups and both can have permissions assigned to them.
+
+### Authentication
+
+Authentication to the Admin API is done via basic authentication using usernam/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the command line.
+
 ## Registries
 
 ### Docker Distribution
 
-Authentication with distribution is based on tokens and PKI, the x509 version of the public key has to be made available to the distribution instance upon start. Dockit comes with an init-container capability that will fetch all know keys and return them.
+Authentication with distribution is based on tokens and PKI, the x509 version of the public key has to be made available to the distribution instance upon start. Dockit comes with an init-container capability that will fetch all known keys and return them so they can be written to disk for the registry to use.
+
+**Note:** unfortunately the distribution registry only reads the cert bundle on start and requires a restart to include any new ones.
 
 #### Configuration
 
@@ -17,33 +31,18 @@ The easiest and recommended method is via environment variables.
 The following environment values should be set:
 
 - `REGISTRY_AUTH_TOKEN_SERVICE` this is the name of your service
-- `REGISTRY_AUTH_TOKEN_ISSUER` with value `dockit` (this is not optional)
+- `REGISTRY_AUTH_TOKEN_ISSUER` with value `dockit`
 - `REGISTRY_AUTH_TOKEN_REALM` this should be the https URL of where dockit is listening (example: <https://dockit.private.io/v2/token>)
-- `REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE` should be set to `/dockit/certs.pem` (more below)
+- `REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE` should be a pem that has all valid signing certs, if using dockit init-conatiner use `/dockit/certs.pem`
 
-```json
-{"token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsIng1YyI6WyJNSUlDK1RDQ0FwK2dBd0lCQWdJQkFEQUtCZ2dxaGtqT1BRUURBakJHTVVRd1FnWURWUVFERXp0U1RVbEdPbEZNUmpRNlEwZFFNenBSTWtWYU9sRklSRUk2VkVkRlZUcFZTRlZNT2taTVZqUTZSMGRXV2pwQk5WUkhPbFJMTkZNNlVVeElTVEFlRncweU1qQXhNVEF5TWpJeE5EbGFGdzB5TXpBeE1qVXlNakl4TkRsYU1FWXhSREJDQmdOVkJBTVRPMUJaUTFJNlNWQmFRanBJUWxGWE9qZE1SVms2UWtGV1FqcEhTRGRhT2xWSVZ6TTZVa3RMVWpwRE4wNHpPbGxOTkZJNlNWaE5TRHBLVkZCQ01JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBbE5JOGFtMlBERnZzNndOeVl2d0dkZWZXVXJXQWdMZ3N2MzA2MnZycG5VNkN0WUpEZDZ2K2NEVG1FN1FlTllEaFMyaU1wU3djZkRCL2RFclEwdnhIZE4ycDIvODZmZy9TeWlIMnhmMGFVTjlDV1dud0JPaTIvS3hLditpbFNlQ01HYXRwRlg3SmYxcWI4N0Q5NUxOVDBvOU9OTmYxT3RidjY5ck9tL1RIVFh3clUvV3dTZlUyWktUbEw4SVRXRkRXN09ZK3hXdUJ0WUpteVhqcVpsaWRBbUNTdTdHY0Y0MVB5em9KTFFTMnJCdXJwOXc0cWgxMFk1bUNIcWdsaEI1Rk9aOUs0T2pUaVhUUHJFUk5WcnArUFVIR3JBYVRPRTBwQzgyUHBuWVZhNzNDUkdsMEdDdC9RckJwVjRpdmswdzF0eEtkV1NiSDNnRmtqZ2g1N0tOcDhRSURBUUFCbzRHeU1JR3ZNQTRHQTFVZER3RUIvd1FFQXdJSGdEQVBCZ05WSFNVRUNEQUdCZ1JWSFNVQU1FUUdBMVVkRGdROUJEdFFXVU5TT2tsUVdrSTZTRUpSVnpvM1RFVlpPa0pCVmtJNlIwZzNXanBWU0Zjek9sSkxTMUk2UXpkT016cFpUVFJTT2tsWVRVZzZTbFJRUWpCR0JnTlZIU01FUHpBOWdEdFNUVWxHT2xGTVJqUTZRMGRRTXpwUk1rVmFPbEZJUkVJNlZFZEZWVHBWU0ZWTU9rWk1WalE2UjBkV1dqcEJOVlJIT2xSTE5GTTZVVXhJU1RBS0JnZ3Foa2pPUFFRREFnTklBREJGQWlFQTdIY1VyVm1namo1cE01MXhZVHd2eGE1VnRqd2hub0dRZjFxTU52UGVHeVlDSUFwYm4vWFkvS1F5WWFWRnRjMWtsb0lmZzd4L3hlbkZhbkp4L0F2cURGdFgiXX0.eyJhY2Nlc3MiOltdLCJhdWQiOiJyZWdpc3RyeS5kb2NrZXIuaW8iLCJleHAiOjE2NDk1Mjk3NjYsImlhdCI6MTY0OTUyOTQ2NiwiaXNzIjoiYXV0aC5kb2NrZXIuaW8iLCJqdGkiOiJINDk4MXNON01FQUttLWZROUtOcyIsIm5iZiI6MTY0OTUyOTE2Niwic3ViIjoiIn0.eJm-xHlT9y6bjkpUg8ZXmCngYaUda4M7Uik7FI02XZFNK72PWIeJC7OSdOlGf3GAcvh_bjsk2QsTiZtC5HJRGZEZMzoWqLpSsNHRk8vM4BdJjQmr7EAasBT0yDqVj_-I8MxO0tbEPxwXGoINxcfhfNe99H0scO_SD-a7q9G1DivfiIYup3J4WiJTCchUvJaUOdhSjcaURIk65ZEXHuQrf8cS8r2TsIeIv4a3Cm7RuiVZAekYPVe_6P0D2-JosIKoKCduj4-2Ftfoqh_3BguNmn-hZ2X3TQlIhUQDY-n8F-CS1w8klXcOQcpiI00W7JS_d_5lCGl6w3d0qgcf6LEjxA","access_token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsIng1YyI6WyJNSUlDK1RDQ0FwK2dBd0lCQWdJQkFEQUtCZ2dxaGtqT1BRUURBakJHTVVRd1FnWURWUVFERXp0U1RVbEdPbEZNUmpRNlEwZFFNenBSTWtWYU9sRklSRUk2VkVkRlZUcFZTRlZNT2taTVZqUTZSMGRXV2pwQk5WUkhPbFJMTkZNNlVVeElTVEFlRncweU1qQXhNVEF5TWpJeE5EbGFGdzB5TXpBeE1qVXlNakl4TkRsYU1FWXhSREJDQmdOVkJBTVRPMUJaUTFJNlNWQmFRanBJUWxGWE9qZE1SVms2UWtGV1FqcEhTRGRhT2xWSVZ6TTZVa3RMVWpwRE4wNHpPbGxOTkZJNlNWaE5TRHBLVkZCQ01JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBbE5JOGFtMlBERnZzNndOeVl2d0dkZWZXVXJXQWdMZ3N2MzA2MnZycG5VNkN0WUpEZDZ2K2NEVG1FN1FlTllEaFMyaU1wU3djZkRCL2RFclEwdnhIZE4ycDIvODZmZy9TeWlIMnhmMGFVTjlDV1dud0JPaTIvS3hLditpbFNlQ01HYXRwRlg3SmYxcWI4N0Q5NUxOVDBvOU9OTmYxT3RidjY5ck9tL1RIVFh3clUvV3dTZlUyWktUbEw4SVRXRkRXN09ZK3hXdUJ0WUpteVhqcVpsaWRBbUNTdTdHY0Y0MVB5em9KTFFTMnJCdXJwOXc0cWgxMFk1bUNIcWdsaEI1Rk9aOUs0T2pUaVhUUHJFUk5WcnArUFVIR3JBYVRPRTBwQzgyUHBuWVZhNzNDUkdsMEdDdC9RckJwVjRpdmswdzF0eEtkV1NiSDNnRmtqZ2g1N0tOcDhRSURBUUFCbzRHeU1JR3ZNQTRHQTFVZER3RUIvd1FFQXdJSGdEQVBCZ05WSFNVRUNEQUdCZ1JWSFNVQU1FUUdBMVVkRGdROUJEdFFXVU5TT2tsUVdrSTZTRUpSVnpvM1RFVlpPa0pCVmtJNlIwZzNXanBWU0Zjek9sSkxTMUk2UXpkT016cFpUVFJTT2tsWVRVZzZTbFJRUWpCR0JnTlZIU01FUHpBOWdEdFNUVWxHT2xGTVJqUTZRMGRRTXpwUk1rVmFPbEZJUkVJNlZFZEZWVHBWU0ZWTU9rWk1WalE2UjBkV1dqcEJOVlJIT2xSTE5GTTZVVXhJU1RBS0JnZ3Foa2pPUFFRREFnTklBREJGQWlFQTdIY1VyVm1namo1cE01MXhZVHd2eGE1VnRqd2hub0dRZjFxTU52UGVHeVlDSUFwYm4vWFkvS1F5WWFWRnRjMWtsb0lmZzd4L3hlbkZhbkp4L0F2cURGdFgiXX0.eyJhY2Nlc3MiOltdLCJhdWQiOiJyZWdpc3RyeS5kb2NrZXIuaW8iLCJleHAiOjE2NDk1Mjk3NjYsImlhdCI6MTY0OTUyOTQ2NiwiaXNzIjoiYXV0aC5kb2NrZXIuaW8iLCJqdGkiOiJINDk4MXNON01FQUttLWZROUtOcyIsIm5iZiI6MTY0OTUyOTE2Niwic3ViIjoiIn0.eJm-xHlT9y6bjkpUg8ZXmCngYaUda4M7Uik7FI02XZFNK72PWIeJC7OSdOlGf3GAcvh_bjsk2QsTiZtC5HJRGZEZMzoWqLpSsNHRk8vM4BdJjQmr7EAasBT0yDqVj_-I8MxO0tbEPxwXGoINxcfhfNe99H0scO_SD-a7q9G1DivfiIYup3J4WiJTCchUvJaUOdhSjcaURIk65ZEXHuQrf8cS8r2TsIeIv4a3Cm7RuiVZAekYPVe_6P0D2-JosIKoKCduj4-2Ftfoqh_3BguNmn-hZ2X3TQlIhUQDY-n8F-CS1w8klXcOQcpiI00W7JS_d_5lCGl6w3d0qgcf6LEjxA","expires_in":300,"issued_at":"2022-04-09T18:37:46.995938994Z"}
-```
+## Development
 
-```json
-{
-  "alg": "RS256",
-  "typ": "JWT",
-  "x5c": [
-    "MIIC+TCCAp+gAwIBAgIBADAKBggqhkjOPQQDAjBGMUQwQgYDVQQDEztSTUlGOlFMRjQ6Q0dQMzpRMkVaOlFIREI6VEdFVTpVSFVMOkZMVjQ6R0dWWjpBNVRHOlRLNFM6UUxISTAeFw0yMjAxMTAyMjIxNDlaFw0yMzAxMjUyMjIxNDlaMEYxRDBCBgNVBAMTO1BZQ1I6SVBaQjpIQlFXOjdMRVk6QkFWQjpHSDdaOlVIVzM6UktLUjpDN04zOllNNFI6SVhNSDpKVFBCMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlNI8am2PDFvs6wNyYvwGdefWUrWAgLgsv3062vrpnU6CtYJDd6v+cDTmE7QeNYDhS2iMpSwcfDB/dErQ0vxHdN2p2/86fg/SyiH2xf0aUN9CWWnwBOi2/KxKv+ilSeCMGatpFX7Jf1qb87D95LNT0o9ONNf1Otbv69rOm/THTXwrU/WwSfU2ZKTlL8ITWFDW7OY+xWuBtYJmyXjqZlidAmCSu7GcF41PyzoJLQS2rBurp9w4qh10Y5mCHqglhB5FOZ9K4OjTiXTPrERNVrp+PUHGrAaTOE0pC82PpnYVa73CRGl0GCt/QrBpV4ivk0w1txKdWSbH3gFkjgh57KNp8QIDAQABo4GyMIGvMA4GA1UdDwEB/wQEAwIHgDAPBgNVHSUECDAGBgRVHSUAMEQGA1UdDgQ9BDtQWUNSOklQWkI6SEJRVzo3TEVZOkJBVkI6R0g3WjpVSFczOlJLS1I6QzdOMzpZTTRSOklYTUg6SlRQQjBGBgNVHSMEPzA9gDtSTUlGOlFMRjQ6Q0dQMzpRMkVaOlFIREI6VEdFVTpVSFVMOkZMVjQ6R0dWWjpBNVRHOlRLNFM6UUxISTAKBggqhkjOPQQDAgNIADBFAiEA7HcUrVmgjj5pM51xYTwvxa5VtjwhnoGQf1qMNvPeGyYCIApbn/XY/KQyYaVFtc1kloIfg7x/xenFanJx/AvqDFtX"
-  ]
-}
-```
+Developing on Dockit is pretty straight forward you just need a golang development environment. Unless you are willing to take the time to setup trusted certificates, you'll need to modify the docker daemon configuration you are interacting with to add your test registry URI to the insecure registries list.
 
-```json
-{
-  "access": [],
-  "aud": "registry.docker.io",
-  "exp": 1649529766,
-  "iat": 1649529466,
-  "iss": "auth.docker.io",
-  "jti": "H4981sN7MEAKm-fQ9KNs",
-  "nbf": 1649529166,
-  "sub": ""
-}
-```
+The `docker-compose.yml` in the repository is setup to deploy the docker distribution registry version 2 and point it at the `./hack/pki` folder to load the cert bundle.
+
+1. `go run main.go api-server` -- start the api-server
+2. `go run main.go init-container ./hack/pki/server/pem` -- run the init-container
+3. `docker-compose up -d` -- start the docker registry
+
+Develop as necessary.

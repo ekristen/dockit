@@ -43,25 +43,33 @@ func (a *apiServer) Start() error {
 	router.Path("/").HandlerFunc(handlers.Root)
 
 	api := router.PathPrefix("/v2").Subrouter()
-	// Basic Auth
+
+	// Token with Basic Auth
 	api.Path("/token").Methods("GET").HandlerFunc(handlers.Token)
-	// Bearer / OAuth2 Auth
+
+	// Token with Bearer/OAuth2 Auth
 	api.Path("/token").Methods("POST").HandlerFunc(handlers.BearerToken)
 
-	api.Path("/groups").Methods("POST").HandlerFunc(handlers.Root)
-	api.Path("/groups/:id").Methods("DELETE").HandlerFunc(handlers.Root)
+	// Grant / Revoke Permissions
+	api.Path("/admin/{rbac_type}:{rbac_entity}/{type}:{name}:{action}").Methods("PUT").HandlerFunc(handlers.Permission)
+	api.Path("/admin/{rbac_type}:{rbac_entity}/{type}:{name}:{action}").Methods("DELETE").HandlerFunc(handlers.Permission)
 
-	api.Path("/grant").Methods("POST").HandlerFunc(handlers.Grant)
-	api.Path("/revoke").Methods("POST").HandlerFunc(handlers.Grant)
+	// Create User / Group
+	api.Path("/admin/{rbac_type}:{rbac_entity}").Methods("PUT").HandlerFunc(handlers.Root)
 
-	api.Path("/admin/user/{user}/{type}/{name}/{action}").Methods("POST").HandlerFunc(handlers.Grant)
-	api.Path("/admin/group/{group}/{type}/{name}/{action}").Methods("DELETE").HandlerFunc(handlers.Revoke)
+	// Change Password / Enable / Disable
+	api.Path("/admin/{rbac_type}:{rbac_entity}/{action}").Methods("PUT").HandlerFunc(handlers.Action)
 
+	api.Path("/admin/{rbac_type}:{rbac_entity}/{rbac_type_2}:{rbac_entity_2}/{action}").Methods("PUT").HandlerFunc(handlers.Action)
+
+	// PKI Cert Bundle
 	api.Path("/certs/{format}").Methods("GET").HandlerFunc(handlers.PKICerts)
 
-	// Below this point is where the server is started and graceful shutdown occurs.
-
+	// Note: this allows not found urls to be logged via the middleware
+	// It **HAS** to be defined after all other paths are defined.
 	router.NotFoundHandler = router.NewRoute().HandlerFunc(http.NotFound).GetHandler()
+
+	// Below this point is where the server is started and graceful shutdown occurs.
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", a.port),

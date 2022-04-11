@@ -13,6 +13,7 @@ import (
 type Group struct {
 	ID          int64 `gorm:"primaryKey;autoIncrement:false" json:"id"`
 	Name        string
+	Active      bool
 	CreatedAt   *time.Time    `json:"created_at"`
 	UpdatedAt   *time.Time    `json:"updated_at"`
 	Users       []*User       `gorm:"many2many:user_groups"`
@@ -35,6 +36,8 @@ type User struct {
 	Name        string
 	Username    string `gorm:"uniqueIndex"`
 	Password    string
+	Admin       bool
+	Active      bool
 	CreatedAt   *time.Time    `json:"created_at"`
 	UpdatedAt   *time.Time    `json:"updated_at"`
 	Groups      []*Group      `gorm:"many2many:user_groups"`

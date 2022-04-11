@@ -45,8 +45,8 @@ func New(ctx context.Context, dialect string, dsn string, config *gorm.Config) (
 		return nil, err
 	}
 
-	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&User{Username: "anonymous", Password: "anonymous"})
-	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&User{Username: "test", Password: "test"})
+	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&User{Username: "anonymous", Password: "anonymous", Active: true})
+	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&User{Username: "test", Password: "test", Active: true, Admin: true})
 
 	return db, nil
 }

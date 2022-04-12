@@ -28,7 +28,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = path.Base(os.Args[0])
-	app.Usage = common.AppVersion.Name
+	app.Usage = "simple and effective oci registry authentication"
 	app.Version = common.AppVersion.Summary
 	app.Authors = []*cli.Author{
 		{

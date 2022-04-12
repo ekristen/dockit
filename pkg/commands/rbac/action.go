@@ -6,13 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 
+	"github.com/ekristen/dockit/pkg/apiserver/response"
 	"github.com/ekristen/dockit/pkg/commands/global"
 	"github.com/ekristen/dockit/pkg/common"
 )
@@ -82,12 +82,26 @@ func (s *actionCommand) Execute(c *cli.Context) (err error) {
 	logrus.WithField("headers", resp.Header).Debug("response headers")
 	logrus.WithField("status", resp.StatusCode).Debug("response Status Code")
 
-	body, err := ioutil.ReadAll(resp.Body)
+	res, err := response.ReadAllDecode(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(body))
+	if !res.Status {
+		fmt.Println("Error Retrieving Permissions:")
+		for _, e := range res.Errors {
+			fmt.Printf(" - %s\n", e)
+		}
+	} else {
+		fmt.Println("Permissions:")
+		if len(res.Data.([]interface{})) == 0 {
+			fmt.Println(" - NONE")
+		}
+		for _, e := range res.Data.([]interface{}) {
+			p := e.(map[string]interface{})
+			fmt.Printf("  %s -> %s/%s\n", p["action"], p["type"], p["name"])
+		}
+	}
 
 	return nil
 }

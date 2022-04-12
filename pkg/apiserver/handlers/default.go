@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,9 @@ import (
 	"github.com/ekristen/dockit/pkg/common"
 	"gorm.io/gorm"
 )
+
+var DBError = errors.New("database error")
+var UnauthorizedError = errors.New("unauthorized")
 
 type handlers struct {
 	db *gorm.DB
@@ -31,7 +35,7 @@ func (h *handlers) Root(w http.ResponseWriter, r *http.Request) {
 func sendErrorResponse(w http.ResponseWriter, code int, err error) {
 	res := types.Response{
 		Success: false,
-		Errors:  []error{err},
+		Errors:  types.Errors{err},
 	}
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(res); err != nil {

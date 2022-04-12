@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ekristen/dockit/pkg/apiserver/types"
+	"github.com/ekristen/dockit/pkg/apiserver/response"
 	"github.com/ekristen/dockit/pkg/common"
 	"github.com/ekristen/dockit/pkg/db"
 	"github.com/ekristen/dockit/pkg/httpauth"
@@ -144,17 +144,22 @@ func (h *handlers) Action(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.WithField(rbac_type, rbac_entity).Info("change password successful")
+		case "permissions":
+			var permissions []db.Permission
+			sql := h.db.Preload(clause.Associations).Where("entity_id = ?", user.ID).Find(&permissions)
+			if sql.Error != nil {
+				logrus.WithError(sql.Error).Error("unable to find permissions")
+				response.New(w, r).AddError(sql.Error).Send(500)
+				return
+			}
+
+			response.New(w, r).AddData(permissions).Send(200)
+			return
 		default:
-			res := types.Response{
-				Success: false,
-				Errors: []error{
-					fmt.Errorf("unsupported action: %s", action),
-				},
-			}
-			if err := json.NewEncoder(w).Encode(res); err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte(`{"success": false}`))
-			}
+			err := fmt.Errorf("unsupported action: %s", action)
+			log.WithError(err).Error("unsupported action")
+			response.New(w, r).AddError(err).Send(501)
+			return
 		}
 	case "group":
 		if action == "add" {
@@ -267,14 +272,24 @@ func (h *handlers) Action(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		case "permissions":
-			w.WriteHeader(200)
+			var permissions []db.Permission
+			sql := h.db.Preload(clause.Associations).Where("entity_id = ?", group.ID).Find(&permissions)
+			if sql.Error != nil {
+				logrus.WithError(sql.Error).Error("unable to find permissions")
+				response.New(w, r).AddError(sql.Error).Send(500)
+				return
+			}
+
+			response.New(w, r).AddData(permissions).Send(200)
+			return
 		default:
 			log.Errorf("unknown action: %s", action)
-			w.WriteHeader(501)
+			sendErrorResponse(w, 501, fmt.Errorf("unsupported action"))
+			return
 		}
 	default:
 		log.Errorf("unknown rbac type: %s", rbac_type)
-		w.WriteHeader(501)
+		response.New(w, r).AddError(fmt.Errorf("unsupported rbac type")).Send(501)
 		return
 	}
 

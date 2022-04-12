@@ -1,11 +1,22 @@
-version: '2'
+version: '3'
 services:
+  init:
+    image: ghcr.io/ekristen/dockit:latest
+    command:
+      - init-container
+      - /dockit/pki/bundle.pem
+    restart: never
+    environment:
+      DOCKIT_BASE_URL: http://host.docker.internal:4315/v2/certs/pem
+    volumes:
+      - "pki:/dockit/pki"
+
   registry:
     image: registry:2
     environment:
       REGISTRY_AUTH_TOKEN_ISSUER: dockit
       REGISTRY_AUTH_TOKEN_REALM: http://host.docker.internal:4315/v2/token
-      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /pki/server.pem
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /dockit/pki/server.pem
       REGISTRY_AUTH_TOKEN_SERVICE: registry
       #REGISTRY_NOTIFICATIONS_ENDPOINTS: |
       #  - name: dockit
@@ -14,6 +25,12 @@ services:
       #    threshold: 5
       #    backoff: 1s
     volumes:
-      - ./hack/pki:/pki
+      - "pki:/dockit/pki"
     ports:
       - 5000:5000
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+volumes:
+  pki:

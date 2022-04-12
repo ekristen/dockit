@@ -4,13 +4,13 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 
+	"github.com/ekristen/dockit/pkg/apiserver/response"
 	"github.com/ekristen/dockit/pkg/commands/global"
 	"github.com/ekristen/dockit/pkg/common"
 )
@@ -58,12 +58,16 @@ func (s *permissionCommand) Execute(c *cli.Context) (err error) {
 	logrus.WithField("headers", resp.Header).Debug("response headers")
 	logrus.WithField("status", resp.StatusCode).Debug("response Status Code")
 
-	body, err := ioutil.ReadAll(resp.Body)
+	res, err := response.ReadAllDecode(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(body))
+	if res.Status {
+		fmt.Printf("%s successful\n", c.Command.Name)
+	} else {
+		fmt.Printf("%s failed\n", c.Command.Name)
+	}
 
 	return nil
 }

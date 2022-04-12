@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
+	"github.com/ekristen/dockit/pkg/apiserver/response"
 	"github.com/ekristen/dockit/pkg/common"
 	"github.com/ekristen/dockit/pkg/db"
 	"github.com/ekristen/dockit/pkg/httpauth"
@@ -19,10 +22,12 @@ func (h *handlers) Permission(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 
+	res := response.New(w, r)
+
 	auth, err := httpauth.Parse(r)
 	if err != nil {
 		log.WithError(err).Error("unable to parse auth header")
-		w.WriteHeader(500)
+		res.AddError(err).Send(500)
 		return
 	}
 
@@ -34,26 +39,25 @@ func (h *handlers) Permission(w http.ResponseWriter, r *http.Request) {
 	sql := h.db.Where("username = ? AND admin = ?", auth.Username(), true).First(&user)
 	if sql.Error != nil {
 		if sql.Error == gorm.ErrRecordNotFound {
-			w.WriteHeader(401)
+			err := fmt.Errorf("unauthorized")
+			res.AddError(err).Send(401)
 			return
 		}
 
 		log.WithError(sql.Error).Error("unable to query database")
-		w.WriteHeader(500)
+		res.AddError(DBError).Send(500)
 		return
 	}
 
 	if sql.RowsAffected == 0 {
 		log.Debug("unknown user")
-		w.WriteHeader(401)
-		w.Write([]byte("unknown user"))
+		res.AddError(UnauthorizedError).Send(401)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(auth.Password())); err != nil {
 		log.WithError(err).Debug("invalid password")
-		w.WriteHeader(401)
-		w.Write([]byte("invalid password"))
+		res.AddError(UnauthorizedError).Send(401)
 		return
 	}
 
@@ -64,13 +68,13 @@ func (h *handlers) Permission(w http.ResponseWriter, r *http.Request) {
 	rbac_type, ok := params["rbac_type"]
 	if !ok {
 		log.Errorf("missing rbac_type parameter")
-		w.WriteHeader(422)
+		res.AddError(errors.New("missing rbac_type parameter")).Send(422)
 		return
 	}
 	rbac_entity, ok := params["rbac_entity"]
 	if !ok {
 		log.Errorf("missing rbac_entity parameter")
-		w.WriteHeader(422)
+		res.AddError(errors.New("missing rbac_entity parameter")).Send(422)
 		return
 	}
 
@@ -80,7 +84,7 @@ func (h *handlers) Permission(w http.ResponseWriter, r *http.Request) {
 		sql := h.db.Where("username = ?", rbac_entity).First(&user)
 		if sql.Error != nil {
 			logrus.WithError(sql.Error).Error("unable to query database")
-			w.WriteHeader(500)
+			res.AddError(DBError).Send(500)
 			return
 		}
 
@@ -125,7 +129,7 @@ func (h *handlers) Permission(w http.ResponseWriter, r *http.Request) {
 		})
 		if sql.Error != nil {
 			logrus.WithError(sql.Error).Error("unable to query database")
-			w.WriteHeader(500)
+			res.AddError(DBError).Send(500)
 			return
 		}
 	case "DELETE":
@@ -137,10 +141,10 @@ func (h *handlers) Permission(w http.ResponseWriter, r *http.Request) {
 			Delete(&db.Permission{})
 		if sql.Error != nil {
 			logrus.WithError(sql.Error).Error("unable to query database")
-			w.WriteHeader(500)
+			res.AddError(DBError).Send(500)
 			return
 		}
 	}
 
-	w.WriteHeader(200)
+	res.Success().Send(200)
 }

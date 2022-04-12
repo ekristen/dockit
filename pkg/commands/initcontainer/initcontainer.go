@@ -58,8 +58,9 @@ func init() {
 
 	flags := []cli.Flag{
 		&cli.StringFlag{
-			Name:  "base-url",
-			Value: "http://localhost:4315/v2",
+			Name:    "base-url",
+			Value:   "http://localhost:4315/v2",
+			EnvVars: []string{"DOCKIT_BASE_URL", "DOCKIT_INITCONTAINER_BASE_URL"},
 		},
 	}
 

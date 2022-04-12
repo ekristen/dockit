@@ -28,12 +28,14 @@ const (
 type Permission struct {
 	ID        int64            `gorm:"primaryKey;autoIncrement:false" json:"id"`
 	Type      PermissionType   `gorm:"index:idx_permissions_unique,unique" json:"type"`
-	Class     string           `gorm:"index:idx_permissions_unique,unique" json:"class"`
+	Class     string           `gorm:"index:idx_permissions_unique,unique" json:"class,omitempty"`
 	Name      string           `gorm:"index:idx_permissions_unique,unique" json:"name"`
 	Action    PermissionAction `json:"action"`
-	EntityID  int64
-	CreatedAt *time.Time `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	EntityID  int64            `json:"-"`
+	User      *User            `gorm:"foreignKey:EntityID" json:"user,omitempty"`
+	Group     *Group           `gorm:"foreignKey:EntityID" json:"group,omitempty"`
+	CreatedAt *time.Time       `json:"created_at"`
+	UpdatedAt *time.Time       `json:"updated_at"`
 }
 
 func (p *Permission) BeforeCreate(tx *gorm.DB) error {

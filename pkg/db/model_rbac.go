@@ -11,13 +11,13 @@ import (
 
 // Group --
 type Group struct {
-	ID          int64 `gorm:"primaryKey;autoIncrement:false" json:"id"`
-	Name        string
-	Active      bool
+	ID          int64         `gorm:"primaryKey;autoIncrement:false" json:"id"`
+	Name        string        `json:"name"`
+	Active      bool          `json:"active"`
 	CreatedAt   *time.Time    `json:"created_at"`
 	UpdatedAt   *time.Time    `json:"updated_at"`
-	Users       []*User       `gorm:"many2many:user_groups"`
-	Permissions []*Permission `gorm:"foreignKey:EntityID"`
+	Users       []*User       `gorm:"many2many:user_groups" json:"users,omitempty"`
+	Permissions []*Permission `gorm:"foreignKey:EntityID" json:"permissions,omitempty"`
 }
 
 // BeforeCreate --
@@ -32,17 +32,17 @@ func (g *Group) BeforeCreate(tx *gorm.DB) error {
 
 // User --
 type User struct {
-	ID          int64 `gorm:"primaryKey;autoIncrement:false" json:"id"`
-	Name        string
-	Username    string `gorm:"uniqueIndex"`
-	Password    string
-	Admin       bool
-	Active      bool
+	ID          int64         `gorm:"primaryKey;autoIncrement:false" json:"id"`
+	Name        string        `json:"name"`
+	Username    string        `gorm:"uniqueIndex"`
+	Password    string        `json:"-"`
+	Admin       bool          `json:"admin"`
+	Active      bool          `json:"active"`
 	CreatedAt   *time.Time    `json:"created_at"`
 	UpdatedAt   *time.Time    `json:"updated_at"`
-	Groups      []*Group      `gorm:"many2many:user_groups"`
-	Permissions []*Permission `gorm:"foreignKey:EntityID"`
-	Tokens      []*Token      `gorm:"foreignKey:UserID"`
+	Groups      []*Group      `gorm:"many2many:user_groups" json:"groups,omitempty"`
+	Permissions []*Permission `gorm:"foreignKey:EntityID" json:"permissions,omitempty"`
+	Tokens      []*Token      `gorm:"foreignKey:UserID" json:"users,omitempty"`
 }
 
 // BeforeCreate --

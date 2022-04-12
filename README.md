@@ -35,6 +35,34 @@ The following environment values should be set:
 - `REGISTRY_AUTH_TOKEN_REALM` this should be the https URL of where dockit is listening (example: <https://dockit.private.io/v2/token>)
 - `REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE` should be a pem that has all valid signing certs, if using dockit init-conatiner use `/dockit/certs.pem`
 
+## CLI
+
+```help
+NAME:
+   dockit - simple and effective oci registry authentication
+
+USAGE:
+   dockit [global options] command [command options] [arguments...]
+
+VERSION:
+   0.1.0-dev-dirty
+
+AUTHOR:
+   Erik Kristensen <erik@erikkristensen.com>
+
+COMMANDS:
+   api-server      dockit api server
+   version         print version
+   init-container  Provides init container capability to fetch and store PKI from Dockit before starting registry server
+   pki-generate    generates an ecdsa private key and certificate
+   rbac            provides the ability to perform various RBAC related actions
+   help, h         Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h     show help (default: false)
+   --version, -v  print the version (default: false)
+```
+
 ## Development
 
 Developing on Dockit is pretty straight forward you just need a golang development environment. Unless you are willing to take the time to setup trusted certificates, you'll need to modify the docker daemon configuration you are interacting with to add your test registry URI to the insecure registries list.

@@ -1,0 +1,69 @@
+dist: releases
+release:
+  github:
+    owner: ekristen
+    name: dockit
+  header: |
+    ## Docker Images
+
+      - `ghcr.io/ekristen/dockit:v{{ .Version }}`
+      - `ghcr.io/ekristen/dockit:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-{{ .Timestamp }}`
+      - `ghcr.io/ekristen/dockit:{{ if .IsSnapshot }}{{ .Branch }}-{{ end }}latest`
+  extra_files:
+    - glob: "*.pub"
+builds:
+  - id: dockit
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s
+      - -X '{{ .ModulePath }}/pkg/common.SUMMARY=v{{ .Version }}'
+      - -X '{{ .ModulePath }}/pkg/common.BRANCH={{ .Branch }}'
+      - -X '{{ .ModulePath }}/pkg/common.VERSION={{ .Tag }}'
+      - -X '{{ .ModulePath }}/pkg/common.COMMIT={{ .Commit }}'
+archives:
+  - id: dockit
+    builds:
+      - dockit
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ .Arm }}"
+dockers:
+  - id: dockit
+    use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile.goreleaser
+    image_templates:
+      - ghcr.io/ekristen/dockit:v{{ .Version }}
+      - ghcr.io/ekristen/dockit:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-{{ .Timestamp }}
+      - ghcr.io/ekristen/dockit:{{ if .IsSnapshot }}{{ .Branch }}-{{ end }}latest
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/ekristen/dockit"
+      - "--platform=linux/amd64"
+signs:
+  - cmd: cosign
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+    args:
+      ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
+    artifacts: all
+docker_signs:
+  - artifacts: all
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: '{{ trimprefix .Summary "v" }}'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"

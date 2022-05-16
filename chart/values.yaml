@@ -1,0 +1,130 @@
+replicaCount: 1
+
+minReadySeconds: 90
+
+image:
+  repository: ghcr.io/ekristen/dockit
+  tag: 0.4.0
+  pullPolicy: IfNotPresent
+  pullSecret: null
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 4315
+  initialDelaySeconds: 60
+  timeoutSeconds: 30
+  failureThreshold: 24
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 4315
+  initialDelaySeconds: 60
+  timeoutSeconds: 30
+  failureThreshold: 24
+
+container:
+  port: 4315
+
+metrics:
+  enabled: true
+  path: /metrics
+  port: 4316
+
+## Pod Annotations
+podAnnotations: {}
+
+## Pod Labels
+podLabels: {}
+
+## Deployment annotations
+# annotations: {}
+
+service:
+  enabled: true
+  annotations: {}
+
+affinity: {}
+
+tolerations: []
+# - key: CriticalAddonsOnly
+#  operator: Exists
+
+## Extra environment variables that will be pass into pods
+env: {}
+#  key: value
+#  key: value
+
+## Extra environment variables (from existing secrets) that will be pass into pods
+envFromSecret: {}
+# ENV_VAR:
+#   secretName: app-secret
+#   secretKeyRef: first-key
+
+resources: {}
+#  limits:
+#    cpu: "1.0"
+#    memory: 1024Mi
+#  requests:
+#    cpu: 200m
+#    memory: 1024Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+ingress:
+  enabled: false
+  tls:
+    enabled: true
+    secret: {}
+  host: dockit.example.org
+  #  path: / (default)
+  #   annotations:
+  #     certmanager.k8s.io/acme-challenge-type: "http01"
+  #     certmanager.k8s.io/cluster-issuer: "letsencrypt"
+  #     kubernetes.io/tls-acme: "true"
+  additionalPaths: {}
+  #    - path: "/api"
+  #      serviceName: xyz
+  #      servicePort: 80
+
+## Secret mounts & volume mounts
+# Defines mounts with secrets. Secrets must be manually created in the namespace.
+volumes:
+  enabled: false
+  volumes: {}
+  #  - name: cache-volume
+  #    emptyDir: {}
+  volumeMounts: {}
+  #  - path: /cache
+  #    name: cache-volume
+  secretVolumeMounts: {}
+  #   - name: secret-files
+  #     path: /etc/secrets
+  #     items:
+  #     - key: blah
+  #     - path: </etc/secrets>/blah
+  #   - name: secret-files
+  #     path: /etc/secrets
+  secretVolumes: {}
+  #   - name: secret-files
+  #     secretName: some-secret-files
+  #   - name: secret-files
+  #     secretName: some-secret-files
+  configMapVolumeMounts: {}
+  #      - name: config-map-files
+  #        path: /etc/config
+  configMapVolumes: {}
+  #      - name: config-map-files
+  #        configMapName: config-map-name

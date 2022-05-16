@@ -1,0 +1,38 @@
+site_name: Dockit
+site_url: https://ekristen.github.io/dockit/
+repo_name: ekristen/dockit
+repo_url: https://github.com/ekristen/dockit/
+edit_uri: ""
+
+site_dir: public
+
+theme:
+  name: material
+  language: en
+  palette:
+    scheme: preference
+    primary: blue
+    accent: indigo
+  features:
+    - navigation.sections
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.highlight
+
+nav:
+  - Home: index.md
+  - Init Container: init-container.md
+  - Guides:
+      - Kustomize Install: kustomize.md
+      - Helm Install: helm.md
+      - PKI with Cert Manager: cert-manager.md

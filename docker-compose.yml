@@ -1,0 +1,45 @@
+version: '3'
+services:
+  chown:
+    image: ubuntu
+    command: chown -R 999:999 /dockit
+    volumes:
+      - "pki:/dockit/pki"
+
+  init:
+    image: ghcr.io/ekristen/dockit:v0.4.0
+    command:
+      - init-container
+      - /dockit/pki/bundle.pem
+    restart: "no"
+    environment:
+      DOCKIT_BASE_URL: http://host.docker.internal:4315/v2
+    volumes:
+      - "pki:/dockit/pki"
+    depends_on:
+      chown:
+        condition: service_completed_successfully
+
+  registry:
+    image: registry:2
+    environment:
+      REGISTRY_AUTH_TOKEN_ISSUER: dockit
+      REGISTRY_AUTH_TOKEN_REALM: http://host.docker.internal:4315/v2/token
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /dockit/pki/bundle.pem
+      REGISTRY_AUTH_TOKEN_SERVICE: registry
+      #REGISTRY_NOTIFICATIONS_ENDPOINTS: |
+      #  - name: dockit
+      #    url: http://192.168.11.152:5100/v2/registry/events
+      #    timeout: 1s
+      #    threshold: 5
+      #    backoff: 1s
+    volumes:
+      - "pki:/dockit/pki"
+    ports:
+      - 5000:5000
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+volumes:
+  pki:

@@ -1,0 +1,5 @@
+.envrc
+*.sqlite
+cosign.key
+releases
+hack

@@ -1,0 +1,62 @@
+version: '3'
+services:
+  chown:
+    image: ubuntu
+    command: chown -R 999:999 /dockit
+    volumes:
+      - "pki:/dockit/pki"
+
+  dockit:
+    image: ghcr.io/ekristen/dockit:v0.4.0
+    command:
+      - api-server
+    environment:
+      SQL_DIALECT: mysql
+      SQL_DSN: root:dockit@tcp(mysql:3306)/dockit?charset=utf8mb4&parseTime=True&loc=Local
+    ports:
+      - 4315:4315
+    depends_on:
+      mysql:
+        condition: service_started
+
+  init:
+    image: ghcr.io/ekristen/dockit:v0.4.0
+    command:
+      - init-container
+      - /dockit/pki/bundle.pem
+    restart: "no"
+    environment:
+      DOCKIT_BASE_URL: http://dockit:4315/v2
+    volumes:
+      - "pki:/dockit/pki"
+    depends_on:
+      chown:
+        condition: service_completed_successfully
+      dockit:
+        condition: service_started
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: dockit
+      MYSQL_DATABASE: dockit
+    ports:
+      - 3306:3306
+
+  registry:
+    image: registry:2
+    environment:
+      REGISTRY_AUTH_TOKEN_ISSUER: dockit
+      REGISTRY_AUTH_TOKEN_REALM: http://dockit:4315/v2/token
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /dockit/pki/bundle.pem
+      REGISTRY_AUTH_TOKEN_SERVICE: registry
+    volumes:
+      - "pki:/dockit/pki"
+    ports:
+      - 5000:5000
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+volumes:
+  pki:

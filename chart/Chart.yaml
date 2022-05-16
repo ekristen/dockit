@@ -1,0 +1,5 @@
+apiVersion: v2
+appVersion: 0.4.0
+description: Dead simple, yet powerful, authentication for the docker distribution registry.
+name: dockit
+version: 1.0.0

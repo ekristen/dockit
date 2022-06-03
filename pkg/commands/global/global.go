@@ -30,10 +30,6 @@ func Flags() []cli.Flag {
 			Name:  "log-full-timestamp",
 			Usage: "force log output to always show full timestamp",
 		},
-		&cli.StringFlag{
-			Name:  "config",
-			Usage: "configuration file",
-		},
 	}
 
 	return globalFlags

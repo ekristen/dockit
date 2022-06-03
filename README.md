@@ -57,6 +57,37 @@ GLOBAL OPTIONS:
    --version, -v  print the version (default: false)
 ```
 
+### API Server
+
+```help
+NAME:
+   main api-server - dockit api server
+
+USAGE:
+   main api-server [command options] [arguments...]
+
+OPTIONS:
+   --node-id value              Unique ID of the Node (this should be increased for each replica) 0-1023 (1024 will select a random number between 0-1023) (default: 1024) [$DOCKIT_NODE_ID, $NODE_ID]
+   --pki-generate               whether or not to generate PKI if false, you must specify --pki-file (default: true) [$DOCKIT_PKI_GENERATE, $PKI_GENERATE]
+   --pki-file value             file to read PKI data from [$DOCKIT_PKI_FILE, $PKI_FILE]
+   --pki-key-type value         Algorithm to use for PKI for Registry to Dockit authentication (default: "ec") [$DOCKIT_PKI_KEY_TYPE, $PKI_KEY_TYPE]
+   --pki-ec-key-size value      Elliptic Curve Key Size (default: 256) [$DOCKIT_PKI_EC_KEY_SIZE, $PKI_EC_KEY_SIZE]
+   --pki-rsa-key-size value     RSA Key Size (default: 4096) [$DOCKIT_PKI_RSA_KEY_SIZE, $PKI_RSA_KEY_SIZE]
+   --pki-cert-years value       The number of years that internal PKI certs are good for. (default: 2) [$DOCKIT_PKI_CERT_YEARS, $PKI_CERT_YEARS]
+   --port value                 Port for the HTTP Server Port (default: 4315) [$DOCKIT_PORT, $PORT]
+   --metrics-port value         Port for the metrics and debug http server to listen on (default: 4316) [$METRICS_PORT, $DOCKIT_METRICS_PORT]
+   --sql-dialect value          The type of sql to use, sqlite or mysql (default: "sqlite") [$DOCKIT_SQL_DIALECT, $SQL_DIALECT]
+   --sql-dsn value              The DSN to use to connect to (default: "file:dockit.sqlite") [$DOCKIT_SQL_DSN, $SQL_DSN]
+   --root-user value            Root Username [$DOCKIT_ROOT_USER, $ROOT_USER]
+   --root-password value        Root Password [$DOCKIT_ROOT_PASSWORD, $ROOT_PASSWORD]
+   --first-user-admin           Indicates if the first user to login should be made an admin (default: true) [$DOCKIT_FIRST_USER_ADMIN, $FIRST_USER_ADMIN]
+   --log-level value, -l value  Log Level (default: "info") [$LOGLEVEL]
+   --log-caller                 log the caller (aka line number and file) (default: false)
+   --log-disable-color          disable log coloring (default: false)
+   --log-full-timestamp         force log output to always show full timestamp (default: false)
+   --help, -h                   show help (default: false)
+```
+
 ## API
 
 Besides the token endpoint the registry uses to request tokens for authentication purposes, dockit comes with an admin API that can be used to manage users, groups, permissions and PKI data.

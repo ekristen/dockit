@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://ekristen.github.io/dockit/</loc>
+         <lastmod>2022-06-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://ekristen.github.io/dockit/database/</loc>
+         <lastmod>2022-06-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://ekristen.github.io/dockit/init-container/</loc>
+         <lastmod>2022-06-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://ekristen.github.io/dockit/guides/cert-manager/</loc>
+         <lastmod>2022-06-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://ekristen.github.io/dockit/guides/helm/</loc>
+         <lastmod>2022-06-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://ekristen.github.io/dockit/guides/kustomize/</loc>
+         <lastmod>2022-06-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+</urlset>

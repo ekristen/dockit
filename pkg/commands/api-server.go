@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"time"
 
@@ -31,7 +32,13 @@ func (s *apiServerCommand) Execute(c *cli.Context) error {
 	}
 
 	if c.Int("node-id") < 1 || c.Int("node-id") > 1024 {
-		return fmt.Errorf("node-id must be 1-1024")
+		return fmt.Errorf("node-id must be 0-1023, or 1024 for random")
+	}
+
+	nodeId := c.Int64("node-id")
+	if c.Int("node-id") == 1024 {
+		rand.Seed(time.Now().UnixNano())
+		nodeId = int64(rand.Intn(1023))
 	}
 
 	if !c.Bool("pki-generate") {
@@ -44,9 +51,9 @@ func (s *apiServerCommand) Execute(c *cli.Context) error {
 
 	log := logrus.WithField("command", "api-server")
 
-	log.Infof("version: %s", common.AppVersion.Summary)
+	log.Infof("version: %s, node: %d", common.AppVersion.Summary, nodeId)
 
-	node, err := snowflake.NewNode(c.Int64("node-id"))
+	node, err := snowflake.NewNode(nodeId)
 	if err != nil {
 		return err
 	}
@@ -91,8 +98,8 @@ func init() {
 	flags := []cli.Flag{
 		&cli.IntFlag{
 			Name:  "node-id",
-			Usage: "Unique ID of the Node (this should be increased for each replica)",
-			Value: 1,
+			Usage: "Unique ID of the Node (this should be increased for each replica) 0-1023 (1024 will select a random number between 0-1023)",
+			Value: 1024,
 		},
 		&cli.BoolFlag{
 			Name:  "pki-generate",

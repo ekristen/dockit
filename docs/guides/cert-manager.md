@@ -28,7 +28,7 @@ metadata:
 spec:
   containers:
     - name: api-server
-      image: gchr.io/ekristen/dockit:latest
+      image: ghcr.io/ekristen/dockit:latest
       command:
         - api-server
         - --pki-generate=false

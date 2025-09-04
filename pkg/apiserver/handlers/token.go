@@ -186,7 +186,7 @@ func (h *handlers) Token(w http.ResponseWriter, r *http.Request) {
 		signingMethod = fmt.Sprintf("RS%d", pki.Bits)
 	} else {
 		err := fmt.Errorf("invalid pki type: %s", pki.Type)
-		log.WithError(err).Error("unknown signing algorith")
+		log.WithError(err).Error("unknown signing algorithm")
 		response.New(w, r).AddError(err).Send(500)
 		return
 	}

@@ -23,7 +23,7 @@ The following environment values should be set:
 - `REGISTRY_AUTH_TOKEN_SERVICE` this is the name of your service
 - `REGISTRY_AUTH_TOKEN_ISSUER` with value `dockit`
 - `REGISTRY_AUTH_TOKEN_REALM` this should be the https URL of where dockit is listening (example: <https://dockit.private.io/v2/token>)
-- `REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE` should be a pem that has all valid signing certs, if using dockit init-conatiner use `/dockit/certs.pem`
+- `REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE` should be a pem that has all valid signing certs, if using dockit init-container use `/dockit/certs.pem`
 
 ## SQL
 
@@ -94,7 +94,7 @@ Besides the token endpoint the registry uses to request tokens for authenticatio
 
 ### Authentication
 
-Authentication to the Admin API is done via basic authentication using usernam/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the c9ommand line.
+Authentication to the Admin API is done via basic authentication using username/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the command line.
 
 ## PKI
 

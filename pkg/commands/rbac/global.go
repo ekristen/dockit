@@ -32,12 +32,12 @@ var (
 		},
 		&cli.StringFlag{
 			Name:    "username",
-			Usage:   "manually specify username, otherwise will attempt to retrieve from docker store",
+			Usage:   "manually specify username; otherwise, will attempt to retrieve from docker store",
 			EnvVars: []string{"DOCKIT_USERNAME", "DOCKIT_GRANT_USERNAME"},
 		},
 		&cli.StringFlag{
 			Name:    "password",
-			Usage:   "manually specify password, otherwise will attempt to retrieve from docker store",
+			Usage:   "manually specify password; otherwise, will attempt to retrieve from docker store",
 			EnvVars: []string{"DOCKIT_PASSWORD", "DOCKIT_GRANT_PASSWORD"},
 		},
 	}

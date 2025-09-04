@@ -12,7 +12,7 @@ Dockit has an Admin API that is used to manage the permissions. Dockit supports 
 
 ### Authentication
 
-Authentication to the Admin API is done via basic authentication using usernam/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the command line.
+Authentication to the Admin API is done via basic authentication using username/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the command line.
 
 ## Registries
 

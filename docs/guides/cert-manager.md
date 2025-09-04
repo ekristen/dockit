@@ -2,7 +2,7 @@
 
 If you are using cert manager and would like to manage PKI for Dockit using it, the good news is you can. Furthermore this works with any backend that the cert-manager support so long as you can mount the certificate and corresponding private key into the Dockit container.
 
-No matter how you request a certificate, the result end's up in an secret that looks like the following.
+No matter how you request a certificate, the result end's up in a secret that looks like the following.
 
 ```yaml
 apiVersion: v1

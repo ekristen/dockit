@@ -45,7 +45,7 @@ spec:
             path: combined.pem
 ```
 
-## Bonus: Reloader by Stakator
+## Bonus: Reloader by Stakater
 
 You can handle automatic updates and restarts of Dockit by leveraging [Reloader](https://github.com/stakater/Reloader)
 

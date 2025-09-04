@@ -1,6 +1,6 @@
 # Init Container Support
 
-Dockit comes with an `init-container` subcommand that's designed to be used with Kuberentes init containers. It can even be used with the latest version of docker compose.
+Dockit comes with an `init-container` subcommand that's designed to be used with Kubernetes init containers. It can even be used with the latest version of docker compose.
 
 The `init-container` subcommand is designed to make an http call against the dockit api server to retrieve all non-expired certificates in it's database and write those to a file. The docker distribution registry can then read the file from disk on start and used to validate JWT tokens.
 

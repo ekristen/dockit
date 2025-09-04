@@ -94,7 +94,7 @@ Besides the token endpoint the registry uses to request tokens for authenticatio
 
 ### Authentication
 
-Authentication to the Admin API is done via basic authentication using usernam/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the c9ommand line.
+Authentication to the Admin API is done via basic authentication using usernam/password. By default it will attempt to use docker credentials stored against the registry on your system, but the user has to have the admin flag set to true. If for some reason credentials cannot be obtained from the docker configuration, you can specify them on the command line.
 
 ## PKI
 

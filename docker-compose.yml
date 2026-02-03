@@ -7,7 +7,7 @@ services:
       - "pki:/dockit/pki"
 
   init:
-    image: ghcr.io/ekristen/dockit:v0.4.0
+    image: ghcr.io/ekristen/dockit:v0.4.3
     command:
       - init-container
       - /dockit/pki/bundle.pem
